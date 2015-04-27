@@ -1,7 +1,5 @@
 {
-	"settings": {
-		"spreedly": {
-			"secret": "Spreedly API token here"
-		}
+	"spreedly": {
+		"secret": "Spreedly API token here"
 	}
 }
