@@ -58,7 +58,11 @@ public class Settings
     private static Lazy<PrivateSettings> _private = new Lazy<PrivateSettings>(() => {
         var filename = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "LINQPad Plugins", "settings-private.json");
         
-        if (!File.Exists(filename)) return null;
+        if (!File.Exists(filename))
+        {
+            string.Format("Private settings file is missing: {0}", filename).Dump("Warning");
+            return null;
+        }
         
         var json = File.ReadAllText(filename);
         return JsonConvert.DeserializeObject<PrivateSettings>(json);
