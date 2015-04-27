@@ -7,11 +7,6 @@
   <Namespace>System.Xml.Serialization</Namespace>
 </Query>
 
-void Main()
-{
-    // Write code to test your extensions here. Press F5 to compile and run.
-}
-
 public static class MyExtensions
 {
     // Write custom extension methods here. They will be available to all queries.
@@ -53,6 +48,33 @@ public static class MyExtensions
     }
 }
 
+public class Settings
+{
+    public static PrivateSettings Private
+    {
+        get { return _private.Value; }
+    }
+    
+    private static Lazy<PrivateSettings> _private = new Lazy<PrivateSettings>(() => {
+        var filename = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "LINQPad Plugins", "settings-private.json");
+        
+        if (!File.Exists(filename)) return null;
+        
+        var json = File.ReadAllText(filename);
+        return JsonConvert.DeserializeObject<PrivateSettings>(json);
+    });
+    
+    public class PrivateSettings
+    {
+        public SpreedlySettings Spreedly { get; set; }
+        
+        public class SpreedlySettings
+        {
+            public string Secret { get; set; }
+        }
+    }
+}
+
 // You can also define non-static classes, enums, etc.
 
 // Define other methods and classes here
@@ -61,13 +83,21 @@ public class Spreedly
     public string EnvironmentKey { get; set; }
     public string Secret { get; set; }
     
+    private string GetSecret()
+    {
+        if (Secret != null)
+            return Secret;
+        
+        return Settings.Private != null ? Settings.Private.Spreedly.Secret : null;
+    }
+    
     private T Download<T>(string pattern, params object[] parameters)
     {
         using (var client = new WebClient())
         {
             client.Credentials = new NetworkCredential() {
                 UserName = EnvironmentKey,
-                Password = Secret
+                Password = GetSecret()
             };
         
             var xml = client.DownloadString(string.Concat("https://core.spreedly.com/v1/", string.Format(pattern, parameters)));
@@ -84,7 +114,7 @@ public class Spreedly
         where T : new()
     {
         var client = new RestSharp.RestClient("https://core.spreedly.com/v1/");
-        client.Authenticator = new RestSharp.HttpBasicAuthenticator(EnvironmentKey, Secret);
+        client.Authenticator = new RestSharp.HttpBasicAuthenticator(EnvironmentKey, GetSecret());
         
         var request = new RestRequest(pattern, RestSharp.Method.POST);
         request.XmlSerializer = new RestSharp.Serializers.DotNetXmlSerializer();
