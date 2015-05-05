@@ -135,6 +135,11 @@ public class Spreedly
         return Download<TransactionsResponse>("payment_methods/{0}/transactions.xml", paymentMethodToken).Transactions;
     }
     
+    public TransactionResponse Transaction(string token)
+    {
+        return Download<TransactionResponse>("transactions/{0}.xml", token);
+    }
+    
     public PaymentMethodResponse PaymentMethod(string paymentMethodToken)
     {
         return Download<PaymentMethodResponse>("payment_methods/{0}.xml", paymentMethodToken);
