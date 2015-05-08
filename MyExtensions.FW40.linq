@@ -75,6 +75,12 @@ public class Settings
         public class SpreedlySettings
         {
             public string Secret { get; set; }
+            public IDictionary<string, string> Environments { get; set;}
+            
+            public SpreedlySettings()
+            {
+                Environments = new Dictionary<string, string>();
+            }
         }
     }
 }
@@ -84,6 +90,18 @@ public class Settings
 // Define other methods and classes here
 public class Spreedly
 {
+    public Spreedly() {}
+    
+    public Spreedly(string environmentName)
+        : this()
+    {
+        string environmentKey;
+        if (!Settings.Private.Spreedly.Environments.TryGetValue(environmentName, out environmentKey))
+            throw new ArgumentOutOfRangeException("environmentName", string.Format("Could not find the environment key for {0}", environmentName));
+        
+        EnvironmentKey = environmentKey;
+    }
+
     public string EnvironmentKey { get; set; }
     public string Secret { get; set; }
     

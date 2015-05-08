@@ -1,5 +1,8 @@
 {
 	"spreedly": {
-		"secret": "Spreedly API token here"
+		"secret": "Spreedly API token here",
+		"environments": {
+			"SomeEnvironmentName": "Spreedly Environment Key"
+		}
 	}
 }
