@@ -1,6 +1,8 @@
 <Query Kind="Program">
+  <NuGetReference>CouchbaseNetClient</NuGetReference>
   <NuGetReference>Newtonsoft.Json</NuGetReference>
   <NuGetReference>RestSharp</NuGetReference>
+  <Namespace>Couchbase</Namespace>
   <Namespace>Newtonsoft.Json</Namespace>
   <Namespace>RestSharp</Namespace>
   <Namespace>System.Net</Namespace>
@@ -70,7 +72,26 @@ public class Settings
     
     public class PrivateSettings
     {
+        public CouchbaseSettings Couchbase { get; set; }
         public SpreedlySettings Spreedly { get; set; }
+                
+        public class CouchbaseSettings
+        {
+            public Dictionary<string, Environment> Environments { get; set; }
+        
+            public CouchbaseSettings()
+            {
+                Environments = new Dictionary<string, Environment>();
+            }
+        
+            public class Environment
+            {
+                public string Host { get; set; }
+                public string RestApiHost { get; set; }
+                public string Username { get; set; }
+                public string Password { get; set; }
+            }
+        }
         
         public class SpreedlySettings
         {
@@ -85,9 +106,6 @@ public class Settings
     }
 }
 
-// You can also define non-static classes, enums, etc.
-
-// Define other methods and classes here
 public class Spreedly
 {
     public Spreedly() {}
@@ -764,5 +782,102 @@ public class Spreedly
     {
         [XmlElement("gateway")]
         public GatewayAbstractResponse[] Gateways { get; set; }
+    }
+}
+
+public class CouchbaseHelper
+{
+    public string Host { get; set; }
+    public string RestApiHost { get; set; }
+    public string Username { get; set; }
+    public string Password { get; set; }
+    
+    public CouchbaseHelper()
+    { }
+    
+    public CouchbaseHelper(string environmentKey)
+        : this()
+    {
+        var env = Settings.Private.Couchbase.Environments[environmentKey];
+        Host = env.Host;
+        RestApiHost = env.RestApiHost;
+        Username = env.Username;
+        Password = env.Password;
+    }
+    
+    private string GetEndKey(string startKey)
+    {
+        return startKey.Length == 0 ? "" : startKey.Substring(0, startKey.Length - 1) + ((char)(startKey[startKey.Length - 1] + 1)).ToString();
+    }
+    
+    private RestClient GetClient()
+    {
+        var client = new RestClient(RestApiHost);
+        client.Authenticator = new HttpBasicAuthenticator(Username, Password);
+        
+        return client;
+    }
+    
+    public IEnumerable<string> DeleteDocuments(string bucketName, Func<string, bool> predicate)
+    {
+        var cluster = new Cluster();
+        cluster.Configuration.Servers = new List<Uri>() { new Uri(new Uri(Host), new Uri("/pools", UriKind.Relative)) };
+        
+        using (var bucket = cluster.OpenBucket(bucketName, ""))
+        {
+            var client = GetClient();
+            
+            var designDocumentName = "dev_temp_" + Guid.NewGuid().ToString();
+            var createTempDesignDoc = new RestRequest("{bucket}/_design/{designDocumentName}", Method.PUT);
+            createTempDesignDoc.AddUrlSegment("bucket", bucketName);
+            createTempDesignDoc.AddUrlSegment("designDocumentName", designDocumentName);
+            createTempDesignDoc.AddJsonBody(new
+            {
+                views = new
+                {
+                    allDocuments = new
+                    {
+                        map = @"function (doc, meta) { emit(meta.id, null); }"
+                    }
+                }
+            });
+            client.Execute(createTempDesignDoc);
+            
+            var query = bucket.CreateQuery(designDocumentName, "allDocuments");
+            query.Limit(int.MaxValue);
+            
+            var keys = bucket.Query<dynamic>(query).Rows
+                .Select(r => r.Id)
+                .Where(predicate)
+                .ToList();
+                
+            var deleteTempDesignDoc = new RestRequest("{bucket}/_design/{designDocumentName}", Method.DELETE);
+            deleteTempDesignDoc.AddUrlSegment("bucket", bucketName);
+            deleteTempDesignDoc.AddUrlSegment("designDocumentName", designDocumentName);
+            client.Execute(deleteTempDesignDoc);
+                
+            bucket.Remove(keys);
+            
+            return keys;
+        }
+    }
+    
+    public class Results
+    {
+        public class Docs
+        {
+            public List<DocumentRef> Rows { get; set; }
+            
+            public Docs()
+            {
+                Rows = new List<DocumentRef>();
+            }
+        }
+        
+        public class DocumentRef
+        {
+            public string Id { get; set; }
+            public string Key { get; set; }
+        }
     }
 }

@@ -4,5 +4,15 @@
 		"environments": {
 			"SomeEnvironmentName": "Spreedly Environment Key"
 		}
+	},
+	"couchbase": {
+		"environments": {
+			"local": {
+				"host": "localhost:8091",
+				"restApiHost": "http://localhost:8092/",
+				"username": "username",
+				"password": "password"
+			}
+		}
 	}
 }
