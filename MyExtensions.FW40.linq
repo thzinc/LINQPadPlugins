@@ -862,6 +862,21 @@ public class CouchbaseHelper
         }
     }
     
+    public IEnumerable<string> DeleteDocuments(string bucketName, IList<string> keys)
+    {
+        var cluster = new Cluster();
+        cluster.Configuration.Servers = new List<Uri>() { new Uri(new Uri(Host), new Uri("/pools", UriKind.Relative)) };
+        
+        using (var bucket = cluster.OpenBucket(bucketName, ""))
+        {
+            var client = GetClient();
+            
+            bucket.Remove(keys);
+            
+            return keys;
+        }
+    }
+    
     public class Results
     {
         public class Docs
