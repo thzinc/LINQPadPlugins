@@ -569,6 +569,30 @@ public class Spreedly
         [XmlElement("storage_state")]
         [JsonProperty("storage_state")]
         public string StorageState { get; set; }
+        
+        [XmlElement("address1")]
+        [JsonProperty("address1")]
+        public string Address1 { get; set; }
+
+        [XmlElement("address2")]
+        [JsonProperty("address2")]
+        public string Address2 { get; set; }
+
+        [XmlElement("city")]
+        [JsonProperty("city")]
+        public string City { get; set; }
+
+        [XmlElement("state")]
+        [JsonProperty("state")]
+        public string State { get; set; }
+
+        [XmlElement("zip")]
+        [JsonProperty("zip")]
+        public string Zip { get; set; }
+
+        [XmlElement("country")]
+        [JsonProperty("country")]
+        public string Country{ get; set; }
 
         public bool Retained { get { return String.Equals("retained", StorageState); } }
     }
