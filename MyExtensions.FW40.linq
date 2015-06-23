@@ -920,3 +920,70 @@ public class CouchbaseHelper
         }
     }
 }
+
+public static class SpWho2Extensions
+{
+    public class ProcessListItem
+    {
+        public int ProcessId { get; set; }
+        public string Status { get; set; }
+        public string Login { get; set; }
+        public string HostName { get; set; }
+        public IEnumerable<ProcessListItem> BlockedByProcesses { get; private set; }
+        public string DatabaseName { get; set; }
+        public string Command { get; set; }
+        public int? CpuTime { get; set; }
+        public int? DiskIO { get; set; }
+        public string ProgramName { get; set; }
+        
+        public ProcessListItem(DataRow r, ReturnDataSet dataSet)
+        {
+            ProcessId = r.ParseField<int>("SPID", int.TryParse).GetValueOrDefault();
+            Status = r.TrimField("Status");
+            Login = r.TrimField("Login");
+            HostName = r.TrimField("HostName").NullIf(s => StringComparer.Ordinal.Equals(s, "."));
+            int dummy;
+            if (int.TryParse(r.TrimField("BlkBy").NullIf(s => StringComparer.Ordinal.Equals(s, ".")), out dummy))
+                BlockedByProcesses = dataSet
+                    .AsProcessList()
+                    .Where(x => x.ProcessId == dummy);
+            else
+                BlockedByProcesses = new List<ProcessListItem>();
+            
+            DatabaseName = r.TrimField("DBName");
+            Command = r.TrimField("Command");
+            CpuTime = r.ParseField<int>("CPUTime", int.TryParse);
+            DiskIO = r.ParseField<int>("DiskIO", int.TryParse);
+            ProgramName = r.TrimField("ProgramName");
+        }
+    }
+    
+    public static IEnumerable<ProcessListItem> AsProcessList(this ReturnDataSet dataSet)
+    {
+        return dataSet.Tables[0]
+            .AsEnumerable()
+            .Select(x => new ProcessListItem(x, dataSet));
+    }
+
+	private static string TrimField(this DataRow row, string columnName)
+	{
+		var value = row.Field<string>(columnName);
+		if (value != null) return value.Trim();
+		return null;
+	}
+	
+	private static T NullIf<T>(this T obj, Func<T, bool> predicate)
+	{
+		return predicate(obj) ? default(T) : obj;
+	}
+	
+	private delegate bool TryParse<T>(string input, out T value);
+	
+	private static T? ParseField<T>(this DataRow row, string columnName, TryParse<T> tryParse)
+		where T: struct
+	{
+		var input = row.TrimField(columnName);
+		T value;
+		return tryParse(input, out value) ? (T?)value : null;
+	}
+}
