@@ -176,6 +176,12 @@ public class Spreedly
         return Download<TransactionResponse>("transactions/{0}.xml", token);
     }
     
+    public IEnumerable<TransactionResponse> GetReferencedTransactions(TransactionResponse transaction)
+    {
+        return transaction.ApiUrls
+            .Select(au => Download<TransactionResponse>(au.ReferencingTransactionUrl.Replace("https://core.spreedly.com/v1/", "")));
+    }
+    
     public PaymentMethodResponse PaymentMethod(string paymentMethodToken)
     {
         return Download<PaymentMethodResponse>("payment_methods/{0}.xml", paymentMethodToken);
@@ -504,6 +510,17 @@ public class Spreedly
         [XmlElement("gateway_specific_response_fields")]
         [JsonProperty("gateway_specific_response_fields")]
         public GatewaySpecificResponseFieldsResponse GatewaySpecificResponseFields { get; set; }
+        
+        [XmlElement("api_urls")]
+        [JsonProperty("api_urls")]
+        public List<ApiUrlsResponse> ApiUrls { get; set; }
+        
+        public class ApiUrlsResponse
+        {
+            [XmlElement("referencing_transaction")]
+            [JsonProperty("referencing_transaction")]
+            public string ReferencingTransactionUrl { get; set; }
+        }
 
         public class ExternalGatewayResponse
         {
@@ -532,6 +549,11 @@ public class Spreedly
                 [JsonProperty("response_reason_code")]
                 public string ResponseReasonCode { get; set; }
             }
+        }
+        
+        public TransactionResponse()
+        {
+            ApiUrls = new List<ApiUrlsResponse>();
         }
     }
     
