@@ -179,6 +179,7 @@ public class Spreedly
     public IEnumerable<TransactionResponse> GetReferencedTransactions(TransactionResponse transaction)
     {
         return transaction.ApiUrls
+            .Where (au => !string.IsNullOrEmpty(au.ReferencingTransactionUrl))
             .Select(au => Download<TransactionResponse>(au.ReferencingTransactionUrl.Replace("https://core.spreedly.com/v1/", "")));
     }
     
@@ -571,6 +572,10 @@ public class Spreedly
         [XmlElement("last_four_digits")]
         [JsonProperty("last_four_digits")]
         public string LastFourDigits { get; set; }
+        
+        [XmlElement("first_six_digits")]
+        [JsonProperty("first_six_digits")]
+        public string FirstSixDigits { get; set; }
 
         [XmlElement("month")]
         [JsonProperty("month")]
