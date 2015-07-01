@@ -108,7 +108,10 @@ public class Settings
 
 public class Spreedly
 {
-    public Spreedly() {}
+    public Spreedly()
+    {
+        DumpRawResponse = false;
+    }
     
     public Spreedly(string environmentName)
         : this()
@@ -122,6 +125,7 @@ public class Spreedly
 
     public string EnvironmentKey { get; set; }
     public string Secret { get; set; }
+    public bool DumpRawResponse { get; set; }
     
     private string GetSecret()
     {
@@ -141,6 +145,8 @@ public class Spreedly
             };
         
             var xml = client.DownloadString(string.Concat("https://core.spreedly.com/v1/", string.Format(pattern, parameters)));
+            
+            if (DumpRawResponse) xml.Dump("Raw Response");
             
             XmlSerializer serializer = new XmlSerializer(typeof(T));
             using (StringReader reader = new StringReader(xml))
@@ -162,6 +168,8 @@ public class Spreedly
         request.AddBody(body);
         
         var response = client.Execute<T>(request);
+        
+        if (DumpRawResponse) response.Content.Dump("Raw Response");
         
         return response.Data;
     }
