@@ -191,6 +191,23 @@ public class Spreedly
             .Select(au => Download<TransactionResponse>(au.ReferencingTransactionUrl.Replace("https://core.spreedly.com/v1/", "")));
     }
     
+    public IEnumerable<TransactionResponse> GetAllTransactions(string transactionId)
+    {
+        var transaction = Transaction(transactionId);
+        
+        return GetAllTransactions(transaction); 
+    }
+    
+    public IEnumerable<TransactionResponse> GetAllTransactions(TransactionResponse transaction)
+    {
+        yield return transaction;
+
+        foreach (var referencedTransaction in GetReferencedTransactions(transaction).SelectMany(GetAllTransactions))
+        {
+            yield return referencedTransaction;
+        }
+    }
+
     public PaymentMethodResponse PaymentMethod(string paymentMethodToken)
     {
         return Download<PaymentMethodResponse>("payment_methods/{0}.xml", paymentMethodToken);
