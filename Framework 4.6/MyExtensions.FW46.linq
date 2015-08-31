@@ -7,6 +7,7 @@
   <Namespace>RestSharp</Namespace>
   <Namespace>System.Net</Namespace>
   <Namespace>System.Xml.Serialization</Namespace>
+  <Namespace>RestSharp.Authenticators</Namespace>
 </Query>
 
 public static class MyExtensions
@@ -210,7 +211,7 @@ public class Spreedly
         where T : new()
     {
         var client = new RestSharp.RestClient("https://core.spreedly.com/v1/");
-        client.Authenticator = new RestSharp.HttpBasicAuthenticator(EnvironmentKey, GetSecret());
+        client.Authenticator = new HttpBasicAuthenticator(EnvironmentKey, GetSecret());
         
         var request = new RestRequest(pattern, RestSharp.Method.POST);
         request.XmlSerializer = new RestSharp.Serializers.DotNetXmlSerializer();
