@@ -92,6 +92,35 @@ public static class MyExtensions
         
         return string.Join(separator, head) + separator + finalConjunction.Trim() + " " + tailCount + " " + (tailCount == 1 ? singleItemWord : pluralItemWord);
     }
+
+    public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> items, int size)
+    {
+        if (size < 1)
+        {
+            throw new ArgumentOutOfRangeException("size", "Batch size must be greater than zero");
+        }
+        
+        var enumerator = items.GetEnumerator();
+        var batch = new List<T>();
+        while (enumerator.MoveNext())
+        {
+            if (batch.Count == size)
+            {
+                yield return batch;
+                batch = new List<T>();
+            }
+            
+            batch.Add(enumerator.Current);
+        }
+        
+        if (batch.Any())
+            yield return batch;
+    }
+
+    public static ISet<T> ToSet<T>(this IEnumerable<T> items, IEqualityComparer<T> comparer = null)
+    {
+        return new HashSet<T>(items, null);
+    }
 }
 
 public class Settings
