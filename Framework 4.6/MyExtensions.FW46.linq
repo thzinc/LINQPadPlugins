@@ -368,6 +368,20 @@ public class Spreedly
     
         throw new Exception(string.Format("Could not successfully migrate payment method token {0} to environment {1}. Details:\n{2}", paymentMethodToken, targetEnvironmentKey, response.Response.Body));
     }
+
+    public string GetTranscript(string transactionId)
+    {
+        using (var client = new WebClient())
+        {
+            client.Credentials = new NetworkCredential()
+            {
+                UserName = EnvironmentKey,
+                Password = GetSecret()
+            };
+
+            return client.DownloadString(string.Concat("https://core.spreedly.com/v1/", string.Format("transactions/{0}/transcript", transactionId)));
+        }
+    }
     
     [XmlRoot("receiver")]
     public class CreateReceiverRequest
