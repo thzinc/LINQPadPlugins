@@ -5,9 +5,11 @@
   <Namespace>Couchbase</Namespace>
   <Namespace>Newtonsoft.Json</Namespace>
   <Namespace>RestSharp</Namespace>
+  <Namespace>RestSharp.Authenticators</Namespace>
   <Namespace>System.Net</Namespace>
   <Namespace>System.Xml.Serialization</Namespace>
-  <Namespace>RestSharp.Authenticators</Namespace>
+  <Namespace>RestSharp.Deserializers</Namespace>
+  <Namespace>RestSharp.Serializers</Namespace>
 </Query>
 
 public static class MyExtensions
@@ -228,7 +230,7 @@ public class Spreedly
             
             if (DumpRawResponse) xml.Dump("Raw Response");
             
-            XmlSerializer serializer = new XmlSerializer(typeof(T));
+            var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
             using (StringReader reader = new StringReader(xml))
             {
                 return (T)serializer.Deserialize(reader);
@@ -1146,4 +1148,36 @@ public static class SpWho2Extensions
 		T value;
 		return tryParse(input, out value) ? (T?)value : null;
 	}
+}
+
+public class NewtonsoftJsonSerializer : IDeserializer, ISerializer
+{
+    public static readonly string[] DefaultContentTypes =
+        {
+            "application/json",
+            "text/javascript"
+        };
+
+    public static NewtonsoftJsonSerializer NewInstance()
+    {
+        return new NewtonsoftJsonSerializer();
+    }
+
+    public string RootElement { get; set; }
+
+    public string Namespace { get; set; }
+
+    public string DateFormat { get; set; }
+
+    public string ContentType { get { return "application/json"; } set { } }
+
+    public virtual T Deserialize<T>(IRestResponse response)
+    {
+        return JsonConvert.DeserializeObject<T>(response.Content);
+    }
+
+    public string Serialize(object obj)
+    {
+        return JsonConvert.SerializeObject(obj);
+    }
 }
