@@ -31,7 +31,7 @@ public static class MyExtensions
         var middle = orderedItems.Skip(skip - 1).Take(2).ToList();
         return combinator(middle.First(), middle.Last());
     }
-   
+
     public static bool AtLeast<T>(this IEnumerable<T> items, int count)
     {
         return items.Some(count, i => i == count);
@@ -657,6 +657,23 @@ public class Spreedly
             [XmlElement("error_code")]
             [JsonProperty("error_code")]
             public string ErrorCode { get; set; }
+
+            [XmlElement("avs_code")]
+            [JsonProperty("avs_code")]
+            public string AvsCode { get; set; }
+
+            [XmlElement("avs_message")]
+            [JsonProperty("avs_message")]
+            public string AvsMessage { get; set; }
+
+            [XmlElement("cvv_code")]
+            [JsonProperty("cvv_code")]
+            public string CvvCode { get; set; }
+
+            [XmlElement("cvv_message")]
+            [JsonProperty("cvv_message")]
+            public string CvvMessage { get; set; }
+            
         }
 
         public class GatewaySpecificResponseFieldsResponse
